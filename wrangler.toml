@@ -6,8 +6,5 @@ kv_namespaces = [
   { binding = "KV", id = "c7809edca7b54b00a21ec6def4460ab7" }
 ]
 
-# Cron Triggers
-# Docs: https://developers.cloudflare.com/workers/platform/triggers/cron-triggers/
-# Configuration: https://developers.cloudflare.com/workers/wrangler/configuration/#triggers
 [triggers]
 crons = ["* * * * *"] # * * * * * = run every minute

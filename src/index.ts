@@ -96,8 +96,12 @@ export default {
 			}
 			return `Add Publication: ${publicationName}, Users: ${publicationUserIDs} Successfully`
 		})
-		app.command("/test-schedule", async ( { context, payload }) => {
-			const userIDs = (await env.KV.list()).keys.map((k) => k.name);
+		return await app.run(request, ctx)
+	},
+
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		const app = new SlackApp({ env })
+		const userIDs = (await env.KV.list()).keys.map((k) => k.name);
 			for (const userID of userIDs) {
 				const saved = await env.KV.get(userID)
 				const current = await fetchUserRSS(userID);
@@ -106,15 +110,8 @@ export default {
 					continue;
 				}
 				await saveCurrentArticles(userID, current, env)
-				await notifySlack(notifyArticles, context.client, env.POST_CHANNEL_ID)
+				await notifySlack(notifyArticles, app.client, env.POST_CHANNEL_ID)
 			}
-			return "Notify Successfully"
-		})
-		return await app.run(request, ctx)
-	},
-
-	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-		console.log(`trigger fired at ${event.cron}`);
 	},
 };
 
