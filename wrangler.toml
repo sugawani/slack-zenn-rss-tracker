@@ -7,3 +7,7 @@ compatibility_date = "2023-12-06"
 # Configuration: https://developers.cloudflare.com/workers/wrangler/configuration/#triggers
 [triggers]
 crons = ["* * * * *"] # * * * * * = run every minute
+
+kv_namespaces = [
+  { binding = "zenn_articles", id = "c7809edca7b54b00a21ec6def4460ab7" }
+]
