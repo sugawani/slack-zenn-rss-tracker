@@ -82,12 +82,18 @@ export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const app = new SlackApp({ env })
 		app.command("/add-watch-user", async ( { context, payload }) => {
+			if (!payload.text) {
+				return "username is required"
+			}
 			const userID = payload.text
 			const data = await fetchUserRSS(userID);
 			await saveCurrentArticles(userID, data, env);
 			return `Add User: ${userID} Successfully`
 		})
 		app.command("/add-watch-publication", async ( { context, payload }) => {
+			if (!payload.text) {
+				return "publication name is required"
+			}
 			const publicationName = payload.text
 			const publicationUserIDs = await getPublicationUserIDs(publicationName)
 			for (const userID of publicationUserIDs) {
