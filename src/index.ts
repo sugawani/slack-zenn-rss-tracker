@@ -1,4 +1,4 @@
-import { SlackApp, SlackEdgeAppEnv } from "slack-cloudflare-workers";
+import { SlackAPIClient, SlackApp, SlackEdgeAppEnv } from "slack-cloudflare-workers";
 import { XMLParser } from "fast-xml-parser";
 
 export interface Env extends SlackEdgeAppEnv {
@@ -96,6 +96,20 @@ export default {
 			}
 			return `Add Publication: ${publicationName}, Users: ${publicationUserIDs} Successfully`
 		})
+		app.command("/test-schedule", async ( { context, payload }) => {
+			const userIDs = (await env.KV.list()).keys.map((k) => k.name);
+			for (const userID of userIDs) {
+				const saved = await env.KV.get(userID)
+				const current = await fetchUserRSS(userID);
+				const notifyArticles = current.rss.channel.item.filter((item) => !saved?.includes(item.guid))
+				if (notifyArticles.length === 0) {
+					continue;
+				}
+				await saveCurrentArticles(userID, current, env)
+				await notifySlack(notifyArticles, context.client, env.POST_CHANNEL_ID)
+			}
+			return "Notify Successfully"
+		})
 		return await app.run(request, ctx)
 	},
 
@@ -105,6 +119,8 @@ export default {
 };
 
 const fetchUserRSS = async (userID: string): Promise<RSSData> => {
+	// キャッシュ残らないように消してみる
+	await caches.default.delete(`https://zenn.dev/${userID}/feed`)
 	const res = await fetch(`https://zenn.dev/${userID}/feed`);
 	if (res.status === 404) {
 		throw new Error(`user ${userID} not found`);
@@ -119,14 +135,6 @@ const saveCurrentArticles = async (userID: KVKey, articles: RSSData, env: Env): 
 	await env.KV.put(userID, JSON.stringify(readArticles));
 }
 
-const getArticles = async (userID: KVKey, env: Env): Promise<KVValue[]> => {
-	const articles = await env.KV.get(userID);
-	if (articles === null) {
-		return [];
-	}
-	return JSON.parse(articles) as KVValue[];
-}
-
 const getPublicationUserIDs = async(publicationName: string): Promise<string[]> => {
 	const res = await fetch(`https://zenn.dev/api/articles?publication_name=${publicationName}`)
 	if (res.status === 404) {
@@ -138,4 +146,15 @@ const getPublicationUserIDs = async(publicationName: string): Promise<string[]> 
 	}
 	const userNames = data.articles.map((article) => article.user.username);
 	return [...new Set(userNames)]
+}
+
+const notifySlack = async (articles: RSSItem[], client: SlackAPIClient, channelID: string): Promise<void> => {
+	if (articles.length === 0) {
+		return
+	}
+	const message = `新しい記事が投稿されました！\n${articles.map((article) => `<${article.link}|${article.title}>`).join("\n")}`
+	await client.chat.postMessage({
+		text: message,
+		channel: channelID,
+	})
 }
