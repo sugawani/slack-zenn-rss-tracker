@@ -2,34 +2,39 @@ import { SlackApp, SlackEdgeAppEnv } from "slack-cloudflare-workers";
 import { XMLParser } from "fast-xml-parser";
 
 export interface Env extends SlackEdgeAppEnv {
-	zenn_articles: KVNamespace;
+	KV: KVNamespace;
 	POST_CHANNEL_ID: string;
 }
 
 type RSSData = {
-	channel: {
-		title: string;
-		link: string;
-		description: string;
-		image: {
-			url: string;
-			title: string;
-			link: string;
-		}
-		language: string;
-		generator: string;
-		lastBuildDate: string;
-		"atom:link": string;
-		item: {
+	rss: {
+		channel: {
 			title: string;
 			link: string;
 			description: string;
-			pubDate: string;
-			guid: string;
-			"dc:creator": string;
-		}[];
+			image: {
+				url: string;
+				title: string;
+				link: string;
+			}
+			language: string;
+			generator: string;
+			lastBuildDate: string;
+			"atom:link": string;
+			item: {
+				title: string;
+				link: string;
+				description: string;
+				pubDate: string;
+				guid: string;
+				"dc:creator": string;
+			}[];
+		}
 	}
 }
+
+type KVKey = string;
+type KVValue = RSSData["rss"]["channel"]["item"][number]["guid"]
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
