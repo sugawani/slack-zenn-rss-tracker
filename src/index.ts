@@ -8,11 +8,13 @@ export interface Env extends SlackEdgeAppEnv {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const app = new SlackApp({ env })
-		app.command("add-watch-user", async ( { context, payload }) => {
+		app.command("/add-watch-user", async ( { context, payload }) => {
 			console.log(`payload posted to add-watch-user ${payload.text}`)
+			return "hello from /add-watch-user"
 		})
-		app.command("add-watch-publication", async ( { context, payload }) => {
-			console.log(`payload posted to add-watch-publication: ${payload.text}`)
+		app.command("/add-watch-publication", async ( { context, payload }) => {
+			console.log(`/payload posted to add-publication: ${payload.text}`)
+			return "hello from /add-watch-publication"
 		})
 		return await app.run(request, ctx)
 	},
