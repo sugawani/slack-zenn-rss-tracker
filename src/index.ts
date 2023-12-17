@@ -42,6 +42,7 @@ export default {
 		app.command("/add-watch-user", async ( { context, payload }) => {
 			const userID = payload.text
 			const data = await fetchUserRSS(userID);
+			await saveCurrentArticles(userID, data, env);
 			return `Add User: ${userID} Successfully`
 		})
 		app.command("/add-watch-publication", async ( { context, payload }) => {
