@@ -90,8 +90,11 @@ export default {
 		app.command("/add-watch-publication", async ( { context, payload }) => {
 			const publicationName = payload.text
 			const publicationUserIDs = await getPublicationUserIDs(publicationName)
-			console.log(`publicationUserIDs: ${publicationUserIDs}`)
-			return "hello from /add-watch-publication"
+			for (const userID of publicationUserIDs) {
+				const data = await fetchUserRSS(userID);
+				await saveCurrentArticles(userID, data, env);
+			}
+			return `Add Publication: ${publicationName}, Users: ${publicationUserIDs} Successfully`
 		})
 		return await app.run(request, ctx)
 	},
