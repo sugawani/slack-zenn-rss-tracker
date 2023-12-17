@@ -40,9 +40,9 @@ export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const app = new SlackApp({ env })
 		app.command("/add-watch-user", async ( { context, payload }) => {
-			const data = await fetchUserRSS(payload.text);
-			console.log('%o', data)
-			return "hello from /add-watch-user"
+			const userID = payload.text
+			const data = await fetchUserRSS(userID);
+			return `Add User: ${userID} Successfully`
 		})
 		app.command("/add-watch-publication", async ( { context, payload }) => {
 			console.log(`/payload posted to add-publication: ${payload.text}`)
@@ -64,4 +64,17 @@ const fetchUserRSS = async (userID: string): Promise<RSSData> => {
 	const xml = await res.text();
 	const feed = await new XMLParser().parse(xml) as RSSData;
 	return feed;
+}
+
+const saveCurrentArticles = async (userID: KVKey, articles: RSSData, env: Env): Promise<void> => {
+	const readArticles = articles.rss.channel.item.map((item) => (item.guid))
+	await env.KV.put(userID, JSON.stringify(readArticles));
+}
+
+const getArticles = async (userID: KVKey, env: Env): Promise<KVValue[]> => {
+	const articles = await env.KV.get(userID);
+	if (articles === null) {
+		return [];
+	}
+	return JSON.parse(articles) as KVValue[];
 }
