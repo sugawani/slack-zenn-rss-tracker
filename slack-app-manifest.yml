@@ -1,0 +1,25 @@
+display_information:
+  name: ブログ投稿通知
+  description: 新しく投稿されたブログを通知します
+  background_color: "#000000"
+features:
+  bot_user:
+    display_name: new-blog-notify
+    always_online: true
+  slash_commands:
+    - command: /add-watch-user
+      url: https://your-cloudflare-workers-url
+      description: ブログの投稿を監視するユーザーを追加します
+      usage_hint: /add-watch-user zenn_user_name
+      should_escape: false
+    - command: /add-watch-publication
+      url: https://your-cloudflare-workers-url
+      description: 指定した Publication に属するユーザの投稿の監視を追加します
+      usage_hint: /add-watch-publication publication_name
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - chat:write.public
+      - commands
